@@ -23,6 +23,7 @@ Permintaan bergabung disetujui otomatis sesuai aturan yang kamu atur per chat. S
 
 **4. Alat bantu admin**
 - **Ban manual** lewat ID: perintah `/ban ID` atau menu Penegakan Member > Ban Manual.
+- **Cabut ban per ID**: menu Penegakan Member > Cabut Ban, lalu pilih cakupan: semua channel/grup, salah satu chat, atau beberapa chat yang dipilih. Lewat perintah: `/unban ID` (pilih lewat tombol), `/unban ID semua`, atau `/unban ID ID_CHAT`. Bisa beberapa ID sekaligus.
 - **Sinkronkan Member**: mencocokkan catatan member bot dengan keadaan sebenarnya di Telegram (bertahap, ulangi sampai sisa 0).
 - Nama channel/grup diperbarui otomatis saat diganti. Tombol **Segarkan Daftar** memaksa pembaruan.
 
@@ -129,7 +130,7 @@ Untuk pemeriksaan lebih sering (misal tiap jam, untuk batas waktu 12 jam):
 - Channel dengan fitur "Restrict Saving Content" bisa membuat verifikasi tidak pasti. Hasilnya tetap aman: postingan dilewati dan tidak ada yang diban.
 - Hanya keluar atas kemauan sendiri yang memicu ban. Member yang dikeluarkan admin tidak diban otomatis.
 - Admin channel, admin bot, dan whitelist tidak pernah diban otomatis.
-- Salah ban? Gunakan `/unban ID` atau menu Riwayat Ban > Cabut Ban.
+- Salah ban? Gunakan `/unban ID` atau menu Penegakan Member > Cabut Ban.
 
 ## Pemecahan masalah
 
@@ -141,4 +142,5 @@ Untuk pemeriksaan lebih sering (misal tiap jam, untuk batas waktu 12 jam):
 | Komentar tidak terbaca | Bot harus admin di grup diskusi, dan grup itu harus terhubung ke channel |
 | Laporan "Chat log tidak dapat dijangkau" | Kirim `/start` ke bot dari akun admin pertama |
 | Gagal ban di sebuah chat | Hak admin bot kurang, periksa laporan notifikasi |
+| Tombol Auto Approve tidak merespons / muncul "Terjadi kesalahan" | Jalankan ulang seluruh `supabase/schema.sql` di Supabase SQL Editor, lalu buka `/api/setup?key=...` lagi |
 | Setelah ubah variabel tidak berefek | Di Vercel buka **Deployments > Redeploy** |

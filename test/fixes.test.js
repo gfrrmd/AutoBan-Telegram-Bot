@@ -117,7 +117,9 @@ test('ban manual: perintah /ban, tombol, dan menghormati whitelist', async () =>
   assert.match(reply, /<code>60000<\/code>: dilewati/);
   await press('bn:777');
   assert.ok(h.calls.some((c) => c.method === 'banChatMember' && c.params.user_id === 777));
-  await press('ub:777');
+  await press('ub:777'); // membuka pilihan cakupan, belum mencabut
+  assert.ok(!h.calls.some((c) => c.method === 'unbanChatMember'));
+  await press('us:all');
   assert.ok(h.calls.some((c) => c.method === 'unbanChatMember' && c.params.user_id === 777));
   await press('bn:777', 999); // bukan admin
   assert.equal(h.calls.filter((c) => c.method === 'banChatMember').length, 2);
@@ -128,4 +130,67 @@ test('ban manual lewat menu: sesi meminta ID lalu mengeksekusi', async () => {
   await press('bm:ask');
   await handleUpdate({ message: { chat: { id: 1, type: 'private' }, from: { id: 1 }, text: '88888' } });
   assert.ok(h.calls.some((c) => c.method === 'banChatMember' && c.params.user_id === 88888));
+});
+
+const say = (text) => handleUpdate({ message: { chat: { id: 1, type: 'private' }, from: { id: 1 }, text } });
+const twoChats = (h) => {
+  h.chat({ managed: true });
+  h.t.chats.push({ chat_id: -1002, title: 'Grup B', type: 'supergroup', bot_admin: true, managed: true });
+  h.t.chats.push({ chat_id: -1003, title: 'Grup C', type: 'supergroup', bot_admin: true, managed: false });
+};
+const unbans = (h) => h.calls.filter((c) => c.method === 'unbanChatMember').map((c) => c.params.chat_id);
+
+test('cabut ban per ID: semua chat (termasuk yang tidak terkelola)', async () => {
+  const h = setup(); twoChats(h);
+  await press('u:ask');
+  await say('123456');
+  await press('us:all');
+  assert.deepEqual(unbans(h).sort(), [-1003, -1002, -1001].sort());
+});
+
+test('cabut ban per ID: salah satu chat', async () => {
+  const h = setup(); twoChats(h);
+  await say('/unban 123456');
+  await press('us:one');
+  await press('uo:-1002');
+  assert.deepEqual(unbans(h), [-1002]);
+});
+
+test('cabut ban per ID: pilih beberapa chat', async () => {
+  const h = setup(); twoChats(h);
+  await say('/unban 123456 654321');
+  await press('us:multi');
+  await press('um:-1001'); await press('um:-1003'); await press('um:-1003'); // pilih, pilih, batal pilih
+  await press('us:go');
+  assert.deepEqual(unbans(h).sort(), [-1001, -1001].sort());
+  assert.equal(h.calls.filter((c) => c.method === 'unbanChatMember').map((c) => c.params.user_id).sort().join(), '123456,654321');
+});
+
+test('cabut ban: pilih beberapa tanpa pilihan ditolak, sesi habis ditolak', async () => {
+  const h = setup(); twoChats(h);
+  await press('us:all'); // tanpa sesi
+  assert.equal(unbans(h).length, 0);
+  await say('/unban 123456');
+  await press('us:go');
+  assert.equal(unbans(h).length, 0);
+});
+
+test('/unban dengan cakupan langsung: semua dan ID chat', async () => {
+  const h = setup(); twoChats(h);
+  await say('/unban 123456 -1002');
+  assert.deepEqual(unbans(h), [-1002]);
+  h.calls.length = 0;
+  await say('/unban 123456 semua');
+  assert.equal(unbans(h).length, 3);
+});
+
+test('galat setelah tombol dijawab tetap terlihat sebagai pesan', async () => {
+  const h = setup(); h.chat();
+  const db = require('../lib/db');
+  const orig = db.select;
+  db.select = async (t, f) => { if (t === 'join_requests') throw new Error('DB GET join_requests 404: relation does not exist'); return orig(t, f); };
+  await press('ar:-1001');
+  db.select = orig;
+  const msg = h.calls.filter((c) => c.method === 'sendMessage').pop();
+  assert.ok(msg && /Terjadi kesalahan/.test(msg.params.text) && /schema\.sql/.test(msg.params.text));
 });
