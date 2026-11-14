@@ -102,3 +102,40 @@ alter table whitelist enable row level security;
 alter table ban_log enable row level security;
 alter table settings enable row level security;
 alter table sessions enable row level security;
+
+-- =====================================================================
+-- Auto approve permintaan join (aman dijalankan ulang di database lama)
+-- =====================================================================
+
+alter table chats add column if not exists ar_enabled boolean not null default false;
+alter table chats add column if not exists ar_delay_minutes integer not null default 0;
+alter table chats add column if not exists ar_require_photo boolean not null default false;
+alter table chats add column if not exists ar_require_bio boolean not null default false;
+alter table chats add column if not exists ar_link_rule text not null default 'off';   -- off | deny | require
+alter table chats add column if not exists ar_match text not null default 'all';       -- all | any
+alter table chats add column if not exists ar_dm boolean not null default false;
+alter table chats add column if not exists ar_dm_text text;
+alter table chats add column if not exists ar_notify_admin boolean not null default true;
+
+create table if not exists join_requests (
+  id bigserial primary key,
+  chat_id bigint not null,
+  user_id bigint not null,
+  user_chat_id bigint,
+  name text,
+  username text,
+  requested_at timestamptz not null default now(),
+  due_at timestamptz,
+  status text not null default 'waiting',  -- waiting | manual | processing | approved | declined | gone | error
+  reason text,
+  dm_status text,                           -- sent | failed | skipped
+  processed_by text,
+  processed_at timestamptz,
+  unique (chat_id, user_id)
+);
+create index if not exists join_requests_due_idx on join_requests (status, due_at);
+create index if not exists join_requests_chat_idx on join_requests (chat_id, status);
+alter table join_requests enable row level security;
+
+-- Sinkronisasi member: kapan terakhir diverifikasi ke Telegram
+alter table members add column if not exists checked_at timestamptz;

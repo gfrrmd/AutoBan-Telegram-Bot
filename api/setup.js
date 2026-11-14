@@ -16,13 +16,14 @@ module.exports = async (req, res) => {
     await tg.call('setWebhook', {
       url,
       secret_token: cfg.WEBHOOK_SECRET,
-      allowed_updates: ['message', 'channel_post', 'callback_query', 'chat_member', 'my_chat_member'],
+      allowed_updates: ['message', 'channel_post', 'callback_query', 'chat_member', 'my_chat_member', 'chat_join_request'],
       drop_pending_updates: true,
     });
     await tg.call('setMyCommands', {
       commands: [
         { command: 'start', description: 'Buka panel kontrol' },
         { command: 'cek', description: 'Jalankan pemeriksaan member pasif' },
+        { command: 'ban', description: 'Ban pengguna lewat ID' },
         { command: 'unban', description: 'Cabut ban pengguna' },
         { command: 'whitelist', description: 'Tambah pengecualian' },
         { command: 'help', description: 'Bantuan' },

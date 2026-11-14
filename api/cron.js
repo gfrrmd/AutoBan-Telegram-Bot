@@ -1,5 +1,6 @@
 const cfg = require('../lib/config');
 const enf = require('../lib/enforcement');
+const sync = require('../lib/sync');
 
 module.exports = async (req, res) => {
   if (!cfg.CRON_SECRET) return res.status(500).json({ error: 'CRON_SECRET belum diatur' });
@@ -7,6 +8,7 @@ module.exports = async (req, res) => {
   const key = req.query && req.query.key === cfg.CRON_SECRET;
   if (!bearer && !key) return res.status(401).json({ error: 'Unauthorized' });
   try {
+    await sync.refreshAll().catch(() => {});
     const out = await enf.runPassiveCheck();
     const notable = out.flagged.length || out.banned.length || out.errors.length || out.deletedPosts;
     if (notable) await enf.notifyAdmins(enf.formatPassiveSummary(out));

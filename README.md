@@ -13,6 +13,19 @@ Member wajib berkomentar di setiap postingan channel (lewat grup diskusi) dalam 
 - Jika keberadaan postingan tidak bisa dipastikan, bot memilih aman: tidak ada yang diban.
 - Mode simulasi aktif secara bawaan: bot hanya melaporkan siapa yang akan diban.
 
+**3. Auto approve permintaan join** (channel dan grup)
+Permintaan bergabung disetujui otomatis sesuai aturan yang kamu atur per chat. Semua bisa dinyalakan atau dimatikan sendiri-sendiri:
+- Syarat profil: wajib punya foto profil, wajib punya bio, dan aturan link di bio (tidak dicek, wajib tanpa link, atau wajib ada link). Pencocokan bisa **semua syarat** atau **salah satu**.
+- Waktu persetujuan: langsung atau dengan jeda (1 menit sampai 30 hari, bisa isi manual).
+- Pesan ke member setelah disetujui, dengan teks kustom (`{nama}` dan `{chat}`).
+- Yang tidak memenuhi syarat tidak ditolak. Admin menerima pesan dengan tombol **Setujui** dan **Tolak**, atau bisa memutuskan lewat Telegram seperti biasa.
+- Akun di whitelist dan admin melewati syarat profil.
+
+**4. Alat bantu admin**
+- **Ban manual** lewat ID: perintah `/ban ID` atau menu Penegakan Member > Ban Manual.
+- **Sinkronkan Member**: mencocokkan catatan member bot dengan keadaan sebenarnya di Telegram (bertahap, ulangi sampai sisa 0).
+- Nama channel/grup diperbarui otomatis saat diganti. Tombol **Segarkan Daftar** memaksa pembaruan.
+
 **Panel admin** lewat tombol di chat pribadi bot: chat terkelola, batas waktu, toleransi, whitelist, riwayat ban, cabut ban, impor member.
 
 ---
@@ -80,6 +93,25 @@ Jika muncul "Setup berhasil", bot sudah aktif. Buka bot di Telegram dan kirim `/
 6. Masukkan akun penting (diri sendiri, admin, mitra) ke **Whitelist**.
 
 ---
+
+## Auto approve join: persiapan
+
+0. Jika memperbarui dari versi sebelumnya, jalankan ulang `supabase/schema.sql` (menambah kolom `checked_at` untuk sinkronisasi member).
+1. Jalankan ulang `supabase/schema.sql` di SQL Editor (aman diulang, hanya menambah kolom dan tabel `join_requests`).
+2. Deploy kode baru, lalu buka lagi `https://NAMA-PROYEK.vercel.app/api/setup?key=ISI_SETUP_KEY`. Langkah ini wajib agar Telegram mengirim update permintaan join.
+3. Pastikan bot admin dengan hak **Undang Pengguna** (Invite Users / Add Subscribers).
+4. Permintaan join hanya ada jika tautan undangan dibuat dengan opsi **Request Admin Approval**, atau channel/grup publik memakai persetujuan admin.
+5. Di bot: `/start` > **Auto Approve Join** > pilih chat > atur **Syarat Profil**, **Waktu Persetujuan**, **Notifikasi**, lalu nyalakan statusnya.
+
+**Jeda persetujuan butuh cron.** Jeda lebih dari 0 diproses oleh `/api/join-cron`. Cron bawaan Vercel gratis hanya sekali sehari, jadi untuk jeda dalam menit buat cron di cron-job.org setiap 1 menit ke `https://NAMA-PROYEK.vercel.app/api/join-cron?key=ISI_CRON_SECRET`. Persetujuan "Langsung" tidak butuh cron.
+
+**Soal pesan ke member.** Bot tidak bisa mengirim pesan ke orang yang belum pernah memulai bot, kecuali dalam 5 menit setelah orang itu meminta join (batasan Telegram). Jadi pesan "permintaan disetujui" andal untuk persetujuan langsung atau jeda di bawah 5 menit. Untuk jeda lebih lama, pesan hanya sampai ke member yang pernah membuka bot; jika gagal, persetujuan tetap berjalan. Urutan kirim bisa diubah dengan variabel `DM_ORDER` (`before` bawaan, atau `after`).
+
+**Catatan privasi.** Foto dan bio yang disembunyikan lewat pengaturan privasi Telegram terbaca kosong, sehingga orang itu masuk antrean manual (bukan ditolak). Bot tidak menyimpan isi bio.
+
+## Pengujian
+
+`npm test` menjalankan pengujian dengan database dan Telegram tiruan (Node 22 atau lebih baru).
 
 ## Penjadwalan pemeriksaan
 
