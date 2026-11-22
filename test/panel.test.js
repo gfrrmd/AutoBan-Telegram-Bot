@@ -83,3 +83,40 @@ test('input manual: jeda dan teks pesan', async () => {
   await press('ax:-1001'); await say('Selamat datang {nama}!'); assert.equal(h.t.chats[0].ar_dm_text, 'Selamat datang {nama}!');
   await press('az:-1001'); assert.equal(h.t.chats[0].ar_dm_text, null);
 });
+
+/* ---------- Menu per kategori dan diagnostik ---------- */
+
+test('menu utama dikelompokkan per kategori dan semua tombol punya tujuan', async () => {
+  const h = setup();
+  const home = await ui.homeView();
+  const labels = home.keyboard.flat().map((b) => b.text);
+  assert.deepEqual(labels, ['Auto Approve Join', 'Penegakan Member', 'Moderasi Manual', 'Pengaturan', 'Bantuan']);
+  const mod = ui.moderationView();
+  assert.deepEqual(mod.keyboard.flat().map((b) => b.callback_data), ['bm:ask', 'u:ask', 'm:wl', 'm:log', 'm:home']);
+  const enf = ui.enforceView();
+  assert.deepEqual(enf.keyboard.flat().map((b) => b.callback_data), ['m:chats', 'm:passive', 'm:bandm', 'm:home']);
+  assert.ok(h);
+});
+
+test('galat saat /start tidak senyap: admin menerima penjelasan', async () => {
+  const diag = require('../lib/diagnostics');
+  const sent = [];
+  const tgm = require('../lib/telegram');
+  const orig = tgm.send;
+  tgm.send = async (chat, text) => { sent.push({ chat, text }); };
+  try {
+    const cfg = require('../lib/config');
+    const adminId = cfg.ADMIN_IDS[0] || 1;
+    if (!cfg.ADMIN_IDS.length) cfg.ADMIN_IDS.push(adminId);
+    await diag.reportError(
+      { message: { chat: { id: adminId, type: 'private' }, from: { id: adminId } } },
+      new Error('DB GET chats 400: column chats.ar_enabled does not exist')
+    );
+    assert.equal(sent.length, 1);
+    assert.match(sent[0].text, /schema\.sql/);
+    await diag.reportError({ message: { chat: { id: 999, type: 'private' }, from: { id: 999 } } }, new Error('x'));
+    assert.equal(sent.length, 1);
+  } finally {
+    tgm.send = orig;
+  }
+});

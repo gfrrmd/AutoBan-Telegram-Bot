@@ -47,7 +47,20 @@ Siapkan akun **Telegram**, **GitHub**, **Supabase**, dan **Vercel** (semuanya gr
 `https://NAMA-PROYEK.vercel.app/api/setup?key=ISI_SETUP_KEY`
 Jika muncul "Setup berhasil", kirim `/start` ke bot kamu.
 
-> **Memperbarui dari versi lama?** Jalankan ulang `supabase/schema.sql` (aman diulang), deploy kode baru, lalu buka lagi halaman setup di atas.
+> **Memperbarui dari versi lama?** Lihat bagian **Cara Memperbarui** di bawah.
+
+---
+
+## Cara Memperbarui
+
+Setelah kode baru diunggah (push) ke GitHub:
+
+1. **Tunggu Vercel selesai.** Buka Vercel > **Deployments**, tunggu deployment terbaru berstatus **Ready**. Jika berstatus Error, buka dan baca log build.
+2. **Jalankan ulang `supabase/schema.sql`** di Supabase SQL Editor. Aman diulang dan tidak menghapus data. Wajib bila rilis baru menambah fitur, tidak masalah bila tidak ada perubahan.
+3. **Buka halaman setup:** `https://NAMA-PROYEK.vercel.app/api/setup?key=ISI_SETUP_KEY`. Halaman ini memasang ulang webhook dan memeriksa database. Pastikan tertulis **Setup berhasil** dan **Database: siap**.
+4. **Kirim `/status` ke bot** untuk memastikan semuanya sehat, lalu `/start`.
+
+Bila kamu mengubah **Environment Variables** di Vercel, lakukan **Deployments > Redeploy** dulu, baru langkah 3.
 
 ---
 
@@ -58,7 +71,16 @@ Jika muncul "Setup berhasil", kirim `/start` ke bot kamu.
 3. Masukkan akun penting (kamu, admin, mitra) ke **Whitelist**. Mereka tidak pernah diban otomatis.
 4. Biarkan **Mode simulasi** menyala dulu. Bot hanya melapor siapa yang *akan* diban. Matikan setelah kamu yakin.
 
-Perintah: `/start` panel, `/cek` pemeriksaan pasif, `/ban ID`, `/unban ID`, `/whitelist ID`, `/help`.
+**Struktur menu** (`/start`):
+
+| Kategori | Isi |
+|---|---|
+| **Auto Approve Join** | Persetujuan otomatis, syarat profil, aturan, wajib join, antrean |
+| **Penegakan Member** | Chat Terkelola, Cek Member Pasif, Pesan Ban |
+| **Moderasi Manual** | Ban Manual, Cabut Ban, Whitelist, Riwayat Ban |
+| **Pengaturan** dan **Bantuan** | Mode simulasi, notifikasi, panduan |
+
+Perintah: `/start` panel, `/status` kesehatan bot, `/cek` pemeriksaan pasif, `/ban ID`, `/unban ID`, `/whitelist ID`, `/help`.
 
 ---
 
@@ -162,7 +184,8 @@ Variabel opsional: `TIMEZONE` (bawaan `Asia/Jakarta`), `LOG_CHAT_ID` (chat untuk
 
 | Masalah | Solusi |
 |---|---|
-| Bot tidak merespons `/start` | Buka ulang halaman `/api/setup?key=...` dan pastikan ID kamu ada di `ADMIN_IDS`. |
+| Bot tidak merespons `/start` | Buka `/api/setup?key=...` dan baca barisnya: **Galat webhook terakhir** (secret atau URL salah), **Update tertunda** (webhook belum menjawab), **Database** (skema belum diperbarui). Lalu kirim `/status` ke bot. Bila bot membalas "khusus untuk administrator", salin ID yang tampil ke `ADMIN_IDS`, lalu Redeploy. |
+| Bot membalas "Bot mengalami gangguan" | Baca baris **Penyebab** dan **Solusi** di pesan itu. Paling sering: `schema.sql` belum dijalankan ulang atau `SUPABASE_SERVICE_KEY` salah. |
 | Chat tidak muncul di panel | Pastikan bot dijadikan **admin**, bukan anggota biasa. |
 | Muncul "Terjadi kesalahan" di tombol | Jalankan ulang seluruh `supabase/schema.sql`, lalu buka halaman setup lagi. |
 | Pesan syarat tidak sampai ke calon member | Pastikan bot punya hak **Undang Pengguna** dan tautan undangan memakai persetujuan admin. |
@@ -177,4 +200,4 @@ Variabel opsional: `TIMEZONE` (bawaan `Asia/Jakarta`), `LOG_CHAT_ID` (chat untuk
 
 ## Pengujian
 
-`npm test` menjalankan 70 pengujian dengan database dan Telegram tiruan (Node 22 atau lebih baru).
+`npm test` menjalankan 72 pengujian dengan database dan Telegram tiruan (Node 22 atau lebih baru).

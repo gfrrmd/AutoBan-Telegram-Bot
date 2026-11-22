@@ -1,5 +1,6 @@
 const cfg = require('../lib/config');
 const tg = require('../lib/telegram');
+const diag = require('../lib/diagnostics');
 
 module.exports = async (req, res) => {
   if (!cfg.SETUP_KEY || !req.query || req.query.key !== cfg.SETUP_KEY) {
@@ -26,15 +27,24 @@ module.exports = async (req, res) => {
         { command: 'ban', description: 'Ban pengguna lewat ID' },
         { command: 'unban', description: 'Cabut ban pengguna' },
         { command: 'whitelist', description: 'Tambah pengecualian' },
+        { command: 'status', description: 'Periksa kesehatan bot' },
         { command: 'help', description: 'Bantuan' },
       ],
       scope: { type: 'all_private_chats' },
     });
     const me = await tg.call('getMe');
     const info = await tg.call('getWebhookInfo');
-    return res.status(200).send(
-      `Setup berhasil.\nBot: @${me.username}\nWebhook: ${info.url}\nUpdate tertunda: ${info.pending_update_count}\nGalat terakhir: ${info.last_error_message || 'tidak ada'}`
-    );
+    const dbCheck = await diag.checkDatabase();
+    const lines = [
+      `Bot: @${me.username}`,
+      `Webhook: ${info.url}`,
+      `Update tertunda: ${info.pending_update_count}`,
+      `Galat webhook terakhir: ${info.last_error_message || 'tidak ada'}`,
+      `Admin terdaftar: ${cfg.ADMIN_IDS.length} ID`,
+      dbCheck.ok ? 'Database: siap' : `Database: ADA MASALAH\n- ${dbCheck.problems.join('\n- ')}`,
+    ];
+    const head = dbCheck.ok ? 'Setup berhasil.' : 'Setup selesai, tetapi database perlu diperbaiki.';
+    return res.status(dbCheck.ok ? 200 : 500).send(`${head}\n${lines.join('\n')}`);
   } catch (e) {
     return res.status(500).send(`Setup gagal: ${e.message}`);
   }
