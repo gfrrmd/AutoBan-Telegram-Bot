@@ -1,6 +1,6 @@
 {
   "name": "auto-ban-bot",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": true,
   "description": "Bot Telegram penegak keanggotaan lintas channel dan grup (Vercel + Supabase)",
   "engines": {

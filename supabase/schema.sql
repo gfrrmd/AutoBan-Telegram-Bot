@@ -156,3 +156,13 @@ alter table join_requests add column if not exists agreed_at timestamptz;
 -- =====================================================================
 
 alter table ban_log add column if not exists dm_status text;   -- sent | failed | skipped
+
+-- =====================================================================
+-- Hak akses untuk bot (project Supabase baru tidak memberikannya otomatis)
+-- =====================================================================
+
+grant usage on schema public to service_role;
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+alter default privileges in schema public grant all on tables to service_role;
+alter default privileges in schema public grant all on sequences to service_role;

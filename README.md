@@ -185,6 +185,7 @@ Variabel opsional: `TIMEZONE` (bawaan `Asia/Jakarta`), `LOG_CHAT_ID` (chat untuk
 | Masalah | Solusi |
 |---|---|
 | Bot tidak merespons `/start` | Buka `/api/setup?key=...` dan baca barisnya: **Galat webhook terakhir** (secret atau URL salah), **Update tertunda** (webhook belum menjawab), **Database** (skema belum diperbarui). Lalu kirim `/status` ke bot. Bila bot membalas "khusus untuk administrator", salin ID yang tampil ke `ADMIN_IDS`, lalu Redeploy. |
+| Status menampilkan kode `42501` atau "permission denied" | Jalankan ulang seluruh `supabase/schema.sql` (bagian akhirnya berisi perintah GRANT untuk `service_role`). |
 | Bot membalas "Bot mengalami gangguan" | Baca baris **Penyebab** dan **Solusi** di pesan itu. Paling sering: `schema.sql` belum dijalankan ulang atau `SUPABASE_SERVICE_KEY` salah. |
 | Chat tidak muncul di panel | Pastikan bot dijadikan **admin**, bukan anggota biasa. |
 | Muncul "Terjadi kesalahan" di tombol | Jalankan ulang seluruh `supabase/schema.sql`, lalu buka halaman setup lagi. |
