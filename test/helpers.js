@@ -29,7 +29,8 @@ function setup() {
   db.select = async (table, f = {}) => filter(table, f).slice(0, f.limit || 1000).map((r) => ({ ...r }));
   db.selectAll = async (table, f = {}) => filter(table, f).map((r) => ({ ...r }));
   db.getChat = async (id) => (t.chats.find((c) => String(c.chat_id) === String(id)) || null);
-  db.getSettings = async () => ({ sim_mode: true, notify: true, passive_lock: 0 });
+  t.settingsStore = {};
+  db.getSettings = async () => ({ sim_mode: true, notify: true, passive_lock: 0, ban_dm: false, ...t.settingsStore });
   db.upsert = async (table, row, conflict) => {
     const keys = conflict.split(',');
     const ex = t[table].find((r) => keys.every((k) => String(r[k]) === String(row[k])));
@@ -43,11 +44,11 @@ function setup() {
     return rows.map((r) => ({ ...r }));
   };
   db.remove = async (table, f) => { t[table] = t[table].filter((r) => !filter(table, f).includes(r)); };
-  db.insert = async (table, rows) => { for (const r of [].concat(rows)) t[table].push({ id: seq++, ...r }); };
+  db.insert = async (table, rows) => { for (const r of [].concat(rows)) t[table].push({ id: seq++, created_at: new Date().toISOString(), ...r }); };
   db.setSession = async (user_id, state, data) => { t.sessions = [{ user_id, state, data, updated_at: new Date().toISOString() }]; };
   db.getSession = async () => t.sessions[0] || null;
   db.clearSession = async () => { t.sessions = []; };
-  db.setSetting = async () => {};
+  db.setSetting = async (key, value) => { t.settingsStore[key] = value; };
   db.count = async (table, f = {}) => {
     const { or, ...rest } = f;
     let rows = filter(table, rest);
@@ -72,6 +73,7 @@ function setup() {
     if (method === 'approveChatJoinRequest' && behavior.approveError) {
       throw new tg.TgError(method, 400, behavior.approveError);
     }
+    if (method === 'createChatInviteLink') return behavior.noInviteLink ? (() => { throw new tg.TgError(method, 400, 'not enough rights'); })() : { invite_link: 'https://t.me/+abc123' };
     if (method === 'getChat') return behavior.chatInfo || { id: params.chat_id, title: 'Channel Uji' };
     if (method === 'getChatMemberCount') return behavior.count === undefined ? 100 : behavior.count;
     if (method === 'getChatMember') {

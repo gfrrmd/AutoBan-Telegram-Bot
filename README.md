@@ -1,146 +1,180 @@
 # Bot Moderasi Keanggotaan Telegram
 
-Bot Telegram untuk menegakkan aturan keanggotaan lintas channel dan grup. Berjalan di Vercel dengan database Supabase.
+Bot untuk menjaga keanggotaan channel dan grup Telegram. Berjalan gratis di **Vercel** dengan database **Supabase**. Semua diatur lewat tombol di chat pribadi bot, tanpa perlu coding.
 
 ## Fitur
 
-**1. Ban saat keluar**
-Jika seseorang keluar dari salah satu channel yang diaktifkan, bot otomatis memban permanen orang itu di semua chat dalam jaringan ban (misalnya keluar dari Channel A, maka diban di A, B, dan C).
-
-**2. Cek member pasif**
-Member wajib berkomentar di setiap postingan channel (lewat grup diskusi) dalam batas waktu yang bisa diatur bebas. Jika tidak, member diban dari semua chat dalam jaringan.
-- Postingan yang sudah dihapus tidak pernah dihitung. Bot memverifikasi keberadaan postingan sebelum menghitung dan sebelum memban.
-- Jika keberadaan postingan tidak bisa dipastikan, bot memilih aman: tidak ada yang diban.
-- Mode simulasi aktif secara bawaan: bot hanya melaporkan siapa yang akan diban.
-
-**3. Auto approve permintaan join** (channel dan grup)
-Permintaan bergabung disetujui otomatis sesuai aturan yang kamu atur per chat. Semua bisa dinyalakan atau dimatikan sendiri-sendiri:
-- Syarat profil: wajib punya foto profil, wajib punya bio, dan aturan link di bio (tidak dicek, wajib tanpa link, atau wajib ada link). Pencocokan bisa **semua syarat** atau **salah satu**.
-- Waktu persetujuan: langsung atau dengan jeda (1 menit sampai 30 hari, bisa isi manual).
-- Pesan ke member setelah disetujui, dengan teks kustom (`{nama}` dan `{chat}`).
-- Yang tidak memenuhi syarat tidak ditolak. Admin menerima pesan dengan tombol **Setujui** dan **Tolak**, atau bisa memutuskan lewat Telegram seperti biasa.
-- Akun di whitelist dan admin melewati syarat profil.
-
-**4. Alat bantu admin**
-- **Ban manual** lewat ID: perintah `/ban ID` atau menu Penegakan Member > Ban Manual.
-- **Cabut ban per ID**: menu Penegakan Member > Cabut Ban, lalu pilih cakupan: semua channel/grup, salah satu chat, atau beberapa chat yang dipilih. Lewat perintah: `/unban ID` (pilih lewat tombol), `/unban ID semua`, atau `/unban ID ID_CHAT`. Bisa beberapa ID sekaligus.
-- **Sinkronkan Member**: mencocokkan catatan member bot dengan keadaan sebenarnya di Telegram (bertahap, ulangi sampai sisa 0).
-- Nama channel/grup diperbarui otomatis saat diganti. Tombol **Segarkan Daftar** memaksa pembaruan.
-
-**Panel admin** lewat tombol di chat pribadi bot: chat terkelola, batas waktu, toleransi, whitelist, riwayat ban, cabut ban, impor member.
+| Fitur | Fungsi singkat |
+|---|---|
+| **Ban saat keluar** | Member keluar dari satu channel, otomatis diban di semua channel dan grup jaringanmu. |
+| **Cek member pasif** | Member yang tidak berkomentar di postingan channel dalam batas waktu akan diban. Ada mode simulasi agar aman dicoba. |
+| **Auto approve join** | Permintaan bergabung disetujui otomatis sesuai syarat profil (foto, bio, link) dan waktu yang kamu atur. |
+| **Persetujuan aturan** *(opsional)* | Calon member menerima pesan aturan dari bot dan harus menekan tombol **Setuju** dulu. Teks dan tombol bebas kamu ubah. |
+| **Wajib join chat lain** *(opsional)* | Calon member harus sudah bergabung ke 1 sampai 5 channel atau grup lain sebelum disetujui. |
+| **Pesan ban** *(opsional)* | Orang yang diban menerima pesan pemberitahuan dari bot. Teks bebas kamu ubah, berbeda untuk tiap alasan ban. |
+| **Alat admin** | Ban dan cabut ban lewat ID, whitelist, riwayat ban, impor dan sinkronisasi member. |
 
 ---
 
-## Panduan Deploy untuk Pemula
+## Cara Pasang
 
-Siapkan: akun Telegram, akun GitHub (gratis), akun Supabase (gratis), akun Vercel (gratis, login pakai GitHub).
+Siapkan akun **Telegram**, **GitHub**, **Supabase**, dan **Vercel** (semuanya gratis).
 
-### Langkah 1. Buat bot di Telegram
-1. Buka Telegram, cari **@BotFather**, kirim `/newbot`.
-2. Ikuti instruksi nama dan username bot.
-3. Salin **token** yang diberikan (bentuknya `123456:ABC...`). Simpan, ini rahasia.
+**1. Buat bot.** Di Telegram buka **@BotFather**, kirim `/newbot`, lalu salin **token** bot.
 
-### Langkah 2. Ambil ID Telegram kamu
-1. Cari **@userinfobot** di Telegram, kirim `/start`.
-2. Salin angka **Id** kamu. Ini dipakai sebagai admin bot.
+**2. Ambil ID kamu.** Kirim `/start` ke **@userinfobot**, salin angka **Id**.
 
-### Langkah 3. Siapkan database (Supabase)
-1. Buka supabase.com, login, klik **New project**. Isi nama dan password, pilih region terdekat (Singapore), tunggu selesai.
-2. Di menu kiri buka **SQL Editor**, klik **New query**.
-3. Buka file `supabase/schema.sql` dari proyek ini, salin seluruh isinya, tempel, lalu klik **Run**. Pesan "Success" berarti tabel sudah dibuat.
-4. Buka **Project Settings > API**. Salin dua hal:
-   - **Project URL**
-   - **service_role** key (bagian "Project API keys", klik Reveal). Ini rahasia, jangan dibagikan.
+**3. Siapkan database.**
+1. Di supabase.com buat **New project**.
+2. Buka **SQL Editor > New query**, tempel seluruh isi `supabase/schema.sql`, klik **Run**.
+3. Di **Project Settings > API** salin **Project URL** dan **service_role key** (rahasia).
 
-### Langkah 4. Unggah kode ke GitHub
-1. Ekstrak file zip ini di HP/komputer sampai terlihat folder `api`, `lib`, dan lainnya.
-2. Buka github.com, klik **New repository**, beri nama (misal `bot-moderasi`), pilih **Private**, klik **Create repository**.
-3. Klik **uploading an existing file**, unggah seluruh isi hasil ekstrak (folder `api`, `lib`, `supabase`, serta file `package.json`, `vercel.json`, dll.), lalu klik **Commit changes**.
+**4. Unggah ke GitHub.** Ekstrak zip, buat repository **Private** baru, lalu unggah seluruh isinya.
 
-### Langkah 5. Deploy di Vercel
-1. Buka vercel.com, klik **Add New > Project**, pilih repository `bot-moderasi`, klik **Import**.
-2. Buka bagian **Environment Variables**, tambahkan satu per satu:
+**5. Deploy di Vercel.** Klik **Add New > Project**, pilih repository tadi, isi **Environment Variables** berikut, lalu **Deploy**.
 
 | Nama | Isi |
 |---|---|
 | `BOT_TOKEN` | token dari BotFather |
-| `ADMIN_IDS` | ID Telegram kamu (beberapa admin: pisahkan koma) |
-| `WEBHOOK_SECRET` | kata acak, huruf/angka saja, contoh `rahasia8821xyz` |
-| `SETUP_KEY` | kata acak lain untuk membuka halaman setup |
-| `CRON_SECRET` | kata acak lain untuk pemeriksaan terjadwal |
+| `ADMIN_IDS` | ID Telegram kamu (banyak admin: pisahkan koma) |
+| `WEBHOOK_SECRET` | kata acak (huruf dan angka) |
+| `SETUP_KEY` | kata acak lain, untuk membuka halaman setup |
+| `CRON_SECRET` | kata acak lain, untuk pemeriksaan terjadwal |
 | `SUPABASE_URL` | Project URL dari Supabase |
 | `SUPABASE_SERVICE_KEY` | service_role key dari Supabase |
 
-3. Klik **Deploy**, tunggu sampai muncul tampilan selamat.
-
-### Langkah 6. Hubungkan bot ke Vercel
-Buka alamat ini di browser (ganti nilai sesuai milikmu):
-
+**6. Hubungkan bot.** Buka alamat ini di browser:
 `https://NAMA-PROYEK.vercel.app/api/setup?key=ISI_SETUP_KEY`
+Jika muncul "Setup berhasil", kirim `/start` ke bot kamu.
 
-Jika muncul "Setup berhasil", bot sudah aktif. Buka bot di Telegram dan kirim `/start`.
-
-### Langkah 7. Tambahkan bot ke channel dan grup
-1. Jadikan bot **admin** di setiap channel yang ingin dipantau. Berikan hak admin yang tersedia (blokir pengguna/tambah subscriber, hapus pesan). Jika ragu, aktifkan semua kecuali "Tambah Admin Baru".
-2. Untuk cek member pasif: jadikan bot **admin juga di grup diskusi** channel tersebut (grup yang terhubung sebagai kolom komentar).
-3. Chat yang kamu tambahkan sendiri akan langsung muncul di **Chat Terkelola** dan masuk jaringan ban.
-
-### Langkah 8. Atur lewat panel
-1. `/start` lalu **Chat Terkelola**, pilih channel.
-2. **Ban saat keluar**: aktif secara bawaan.
-3. **Cek member pasif**: aktifkan, lalu atur **Batas Waktu** dan **Toleransi**.
-4. **Impor Member**: kirim daftar ID member lama (lihat catatan di bawah).
-5. Biarkan **Mode simulasi** aktif dulu (menu Pengaturan). Jalankan **Cek Member Pasif > Jalankan Pemeriksaan Sekarang** dan baca laporannya. Jika sudah yakin, matikan mode simulasi agar ban benar-benar dijalankan.
-6. Masukkan akun penting (diri sendiri, admin, mitra) ke **Whitelist**.
+> **Memperbarui dari versi lama?** Jalankan ulang `supabase/schema.sql` (aman diulang), deploy kode baru, lalu buka lagi halaman setup di atas.
 
 ---
 
-## Auto approve join: persiapan
+## Cara Pakai
 
-0. Jika memperbarui dari versi sebelumnya, jalankan ulang `supabase/schema.sql` (menambah kolom `checked_at` untuk sinkronisasi member).
-1. Jalankan ulang `supabase/schema.sql` di SQL Editor (aman diulang, hanya menambah kolom dan tabel `join_requests`).
-2. Deploy kode baru, lalu buka lagi `https://NAMA-PROYEK.vercel.app/api/setup?key=ISI_SETUP_KEY`. Langkah ini wajib agar Telegram mengirim update permintaan join.
-3. Pastikan bot admin dengan hak **Undang Pengguna** (Invite Users / Add Subscribers).
-4. Permintaan join hanya ada jika tautan undangan dibuat dengan opsi **Request Admin Approval**, atau channel/grup publik memakai persetujuan admin.
-5. Di bot: `/start` > **Auto Approve Join** > pilih chat > atur **Syarat Profil**, **Waktu Persetujuan**, **Notifikasi**, lalu nyalakan statusnya.
+1. Jadikan bot **admin** di channel dan grup yang ingin dikelola. Chat akan muncul otomatis di panel (`/start`).
+2. Untuk **cek member pasif**, jadikan bot admin juga di grup diskusi channel tersebut.
+3. Masukkan akun penting (kamu, admin, mitra) ke **Whitelist**. Mereka tidak pernah diban otomatis.
+4. Biarkan **Mode simulasi** menyala dulu. Bot hanya melapor siapa yang *akan* diban. Matikan setelah kamu yakin.
 
-**Jeda persetujuan butuh cron.** Jeda lebih dari 0 diproses oleh `/api/join-cron`. Cron bawaan Vercel gratis hanya sekali sehari, jadi untuk jeda dalam menit buat cron di cron-job.org setiap 1 menit ke `https://NAMA-PROYEK.vercel.app/api/join-cron?key=ISI_CRON_SECRET`. Persetujuan "Langsung" tidak butuh cron.
+Perintah: `/start` panel, `/cek` pemeriksaan pasif, `/ban ID`, `/unban ID`, `/whitelist ID`, `/help`.
 
-**Soal pesan ke member.** Bot tidak bisa mengirim pesan ke orang yang belum pernah memulai bot, kecuali dalam 5 menit setelah orang itu meminta join (batasan Telegram). Jadi pesan "permintaan disetujui" andal untuk persetujuan langsung atau jeda di bawah 5 menit. Untuk jeda lebih lama, pesan hanya sampai ke member yang pernah membuka bot; jika gagal, persetujuan tetap berjalan. Urutan kirim bisa diubah dengan variabel `DM_ORDER` (`before` bawaan, atau `after`).
+---
 
-**Catatan privasi.** Foto dan bio yang disembunyikan lewat pengaturan privasi Telegram terbaca kosong, sehingga orang itu masuk antrean manual (bukan ditolak). Bot tidak menyimpan isi bio.
+## Pesan Ban (opsional)
 
-## Pengujian
+Bot bisa memberi tahu orang yang diban lewat pesan pribadi, misalnya "kamu diban permanen dari 3 channel dan grup kami". Bawaannya **mati**.
 
-`npm test` menjalankan pengujian dengan database dan Telegram tiruan (Node 22 atau lebih baru).
+**Cara mengatur:** `/start` > **Penegakan Member** > **Pesan Ban**. Nyalakan, lalu pilih jenisnya untuk **Ubah Teks**, **Reset Teks**, atau **Pratinjau** (pratinjau hanya dikirim ke kamu).
 
-## Penjadwalan pemeriksaan
+| Jenis pesan | Dikirim saat |
+|---|---|
+| Keluar dari Channel | member keluar sendiri |
+| Member Pasif | member diban karena tidak berkomentar |
+| Ban Manual | kamu memakai `/ban` atau tombol ban |
 
-Vercel paket gratis (Hobby) hanya mengizinkan cron **sekali sehari**. Bawaan proyek ini berjalan setiap hari pukul 08:00 WIB. Cukup untuk batas waktu dalam hitungan hari.
+**Variabel teks** (boleh dipakai di mana saja):
 
-Untuk pemeriksaan lebih sering (misal tiap jam, untuk batas waktu 12 jam):
-1. Daftar gratis di cron-job.org.
-2. Buat cron baru dengan alamat `https://NAMA-PROYEK.vercel.app/api/cron?key=ISI_CRON_SECRET`, jadwal tiap jam.
+| Tulis | Terisi dengan |
+|---|---|
+| `{nama}` | nama orang itu |
+| `{jumlah}` | jumlah chat tempat ia berhasil diban |
+| `{alasan}` | alasan singkat (keluar dari channel, tidak aktif berkomentar, dibanned oleh admin) |
+| `{chat}` | channel atau grup asal |
+| `{daftar}` | daftar nama chat tempat ia diban |
 
-## Catatan penting
+Contoh: `Halo {nama}. Kamu diban permanen dari {jumlah} chat karena {alasan}.`
 
-- **Member lama tidak terlihat.** Telegram tidak mengizinkan bot membaca daftar subscriber channel. Bot hanya melacak orang yang bergabung setelah bot aktif. Member lama harus diimpor lewat tombol **Impor Member** (daftar ID, misalnya hasil ekspor dari akun/userbot kamu). Tanpa impor, member lama tidak akan dicek, tetapi tetap diban jika keluar.
-- **Cara kerja per postingan.** Tiap postingan punya batas waktu sendiri. Setelah lewat, member yang sudah bergabung sebelum postingan terbit dan belum berkomentar dihitung terlewat. Member diban jika jumlah postingan terlewat mencapai **Toleransi**.
-- **Deteksi postingan terhapus.** Telegram tidak mengirim notifikasi saat pesan dihapus, jadi bot memeriksa langsung ke channel saat jatuh tempo (menyalin sekejap ke chat admin lalu menghapusnya). Pastikan admin pertama di `ADMIN_IDS` sudah menekan `/start` di bot. Opsional: isi `LOG_CHAT_ID` dengan ID grup privat khusus.
-- Channel dengan fitur "Restrict Saving Content" bisa membuat verifikasi tidak pasti. Hasilnya tetap aman: postingan dilewati dan tidak ada yang diban.
-- Hanya keluar atas kemauan sendiri yang memicu ban. Member yang dikeluarkan admin tidak diban otomatis.
-- Admin channel, admin bot, dan whitelist tidak pernah diban otomatis.
-- Salah ban? Gunakan `/unban ID` atau menu Penegakan Member > Cabut Ban.
+**Yang perlu diketahui:**
+- Telegram hanya mengizinkan bot mengirim pesan ke orang yang **pernah membuka bot**. Orang yang belum pernah membuka bot **tidak akan menerima pesan**. Ban tetap berjalan, dan hasilnya (terkirim atau gagal) tercatat di **Riwayat Ban** serta laporan admin.
+- Pesan dikirim **sekali** setelah ban selesai. Satu orang tidak dikirimi lagi dalam 24 jam, jadi tombol **Ban Ulang** tidak membanjiri pesan.
+- Tidak dikirim jika semua ban gagal. Admin dan whitelist tidak pernah diban, jadi tidak menerima pesan ini.
 
-## Pemecahan masalah
+---
+
+## Auto Approve Join
+
+**Persiapan:** tautan undangan harus memakai opsi **Request Admin Approval** (atau chat publik dengan persetujuan admin), dan bot punya hak **Undang Pengguna**.
+
+Buka `/start` > **Auto Approve Join** > pilih chat, lalu atur:
+
+- **Syarat Profil:** wajib foto, wajib bio, aturan link di bio. Cocokkan *semua* atau *salah satu*.
+- **Waktu Persetujuan:** langsung, atau dengan jeda 1 menit sampai 30 hari.
+- **Notifikasi:** pesan "disetujui" ke member (`{nama}` dan `{chat}` bisa dipakai) dan peringatan ke admin.
+- **Persetujuan Aturan** dan **Wajib Join** (di bawah).
+
+Yang tidak memenuhi syarat **tidak ditolak**. Admin menerima pesan dengan tombol **Setujui** dan **Tolak**. Akun whitelist dan admin melewati semua syarat.
+
+### Persetujuan aturan dan wajib join (opsional)
+
+Keduanya bisa dipakai sendiri-sendiri atau digabung. Alurnya:
+
+```
+Orang meminta join
+      ↓
+Bot kirim pesan: aturan + tombol Setuju + tautan channel/grup wajib
+      ↓
+Orang menekan tombol  →  bot cek apakah sudah bergabung
+      ↓
+Lengkap → disetujui (mengikuti jeda yang diatur)
+Belum   → bot tampilkan yang kurang, orang bisa menekan Cek Lagi
+```
+
+**Mengatur persetujuan aturan:** pilih chat > **Persetujuan Aturan**. Nyalakan, lalu **Ubah Teks** (maksimal 1000 karakter, boleh pakai `{nama}` dan `{chat}`) dan **Ubah Label Tombol** (misalnya "Saya Setuju dan Lanjut"). Tombol **Pratinjau** menampilkan hasilnya.
+
+**Mengatur wajib join:** pilih chat > **Wajib Join**, ketuk channel atau grup yang diwajibkan (maksimal 5, ketuk lagi untuk menghapus), lalu nyalakan. Syaratnya, bot harus **admin** di chat yang diwajibkan agar bisa memeriksa anggota.
+
+Hal yang perlu diketahui:
+- Fitur ini berjalan di dalam **Auto Approve**, jadi Auto Approve chat itu harus aktif.
+- Jika calon member tidak menyelesaikannya dalam 24 jam (bisa diubah lewat `GATE_TTL_MINUTES`), permintaan dipindah ke antrean manual. **Tidak ditolak otomatis.**
+- Jika bot tidak bisa memverifikasi keanggotaan (misalnya hak admin kurang), permintaan masuk antrean manual dan admin diberi tahu. Bot tidak pernah menyetujui saat ragu.
+- Calon member yang menghapus pesannya bisa mengirim `/start` ke bot untuk menerimanya lagi.
+
+---
+
+## Penjadwalan (cron)
+
+Vercel gratis hanya menjalankan cron **sekali sehari** (08:00 WIB). Itu cukup untuk batas waktu dalam hitungan hari. Untuk lebih sering (jeda persetujuan dalam menit, atau cek tiap jam):
+
+1. Daftar gratis di **cron-job.org**.
+2. Buat cron tiap 1 menit ke `https://NAMA-PROYEK.vercel.app/api/join-cron?key=ISI_CRON_SECRET` (persetujuan bertunda).
+3. Opsional, cron tiap jam ke `https://NAMA-PROYEK.vercel.app/api/cron?key=ISI_CRON_SECRET` (cek member pasif).
+
+Persetujuan "Langsung" dan tombol di pesan syarat **tidak butuh cron**.
+
+---
+
+## Catatan Penting
+
+- **Member lama tidak terlihat.** Telegram tidak membolehkan bot membaca daftar subscriber. Bot hanya melacak yang bergabung setelah aktif. Untuk cek member pasif, impor ID member lama lewat tombol **Impor Member**.
+- **Pesan ke calon member.** Telegram hanya mengizinkan bot mengirim pesan ke orang yang belum pernah membuka bot selama **5 menit** setelah mereka meminta join. Pesan syarat dikirim seketika, jadi aman. Jika gagal terkirim, permintaan masuk antrean manual.
+- **Privasi.** Foto dan bio yang disembunyikan terbaca kosong, sehingga orang itu masuk antrean manual. Bot tidak menyimpan isi bio.
+- **Postingan terhapus tidak dihitung.** Jika keberadaan postingan tidak bisa dipastikan, tidak ada yang diban.
+- Hanya **keluar atas kemauan sendiri** yang memicu ban. Member yang dikeluarkan admin tidak diban otomatis.
+- **Salah ban?** Pakai `/unban ID` atau menu Penegakan Member > Cabut Ban.
+
+Variabel opsional: `TIMEZONE` (bawaan `Asia/Jakarta`), `LOG_CHAT_ID` (chat untuk pengecekan postingan), `DM_ORDER` (`before` atau `after`), `GATE_TTL_MINUTES` (bawaan `1440`).
+
+---
+
+## Masalah Umum
 
 | Masalah | Solusi |
 |---|---|
-| Bot tidak merespons `/start` | Buka lagi halaman `/api/setup?key=...`, pastikan ID kamu ada di `ADMIN_IDS` |
-| Chat tidak muncul di panel | Pastikan bot dijadikan **admin**, bukan anggota biasa |
-| Ban saat keluar tidak jalan | Pastikan bot admin di channel dengan hak blokir/tambah subscriber, dan fitur aktif di panel |
-| Komentar tidak terbaca | Bot harus admin di grup diskusi, dan grup itu harus terhubung ke channel |
-| Laporan "Chat log tidak dapat dijangkau" | Kirim `/start` ke bot dari akun admin pertama |
-| Gagal ban di sebuah chat | Hak admin bot kurang, periksa laporan notifikasi |
-| Tombol Auto Approve tidak merespons / muncul "Terjadi kesalahan" | Jalankan ulang seluruh `supabase/schema.sql` di Supabase SQL Editor, lalu buka `/api/setup?key=...` lagi |
-| Setelah ubah variabel tidak berefek | Di Vercel buka **Deployments > Redeploy** |
+| Bot tidak merespons `/start` | Buka ulang halaman `/api/setup?key=...` dan pastikan ID kamu ada di `ADMIN_IDS`. |
+| Chat tidak muncul di panel | Pastikan bot dijadikan **admin**, bukan anggota biasa. |
+| Muncul "Terjadi kesalahan" di tombol | Jalankan ulang seluruh `supabase/schema.sql`, lalu buka halaman setup lagi. |
+| Pesan syarat tidak sampai ke calon member | Pastikan bot punya hak **Undang Pengguna** dan tautan undangan memakai persetujuan admin. |
+| "Verifikasi gagal" saat wajib join | Jadikan bot **admin** di semua channel atau grup yang diwajibkan. |
+| Pesan ban tidak sampai ke orang yang diban | Normal bila orang itu belum pernah membuka bot. Lihat statusnya di **Riwayat Ban**. |
+| Ban saat keluar tidak jalan | Bot harus admin dengan hak blokir, dan fitur aktif di panel chat itu. |
+| Komentar tidak terbaca | Bot harus admin di grup diskusi yang terhubung ke channel. |
+| "Chat log tidak dapat dijangkau" | Kirim `/start` ke bot dari akun admin pertama. |
+| Ubah variabel tidak berefek | Di Vercel buka **Deployments > Redeploy**. |
+
+---
+
+## Pengujian
+
+`npm test` menjalankan 70 pengujian dengan database dan Telegram tiruan (Node 22 atau lebih baru).

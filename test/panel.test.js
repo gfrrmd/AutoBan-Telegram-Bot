@@ -10,18 +10,20 @@ const allButtons = (v) => v.keyboard.flat();
 test('semua view: callback_data <= 64 byte, teks <= 4096, maksimal 6 tombol per layar kategori', async () => {
   const h = setup(); h.chat();
   h.t.chats[0].ar_dm_text = 'x'.repeat(500);
+  h.t.chats[0].ar_agree_text = 'y'.repeat(1000);
   const views = {
     home: await ui.homeView(), enf: ui.enforceView(), hub: await uiAr.hubView(), main: await uiAr.arView(-1001),
     filters: await uiAr.filtersView(-1001), delay: await uiAr.delayView(-1001), notify: await uiAr.notifyView(-1001),
-    queue: await uiAr.queueView(-1001),
+    queue: await uiAr.queueView(-1001), agree: await uiAr.agreeView(-1001), force: await uiAr.forceView(-1001),
+    bandm: await ui.banDmView(), banText: await ui.banTextView('leave'),
   };
   for (const [name, v] of Object.entries(views)) {
     assert.ok(v.text.length < 4096, name);
     for (const b of allButtons(v)) assert.ok(Buffer.byteLength(b.callback_data) <= 64, `${name}: ${b.callback_data}`);
   }
   assert.ok(allButtons(views.home).length <= 6);
-  assert.ok(allButtons(views.main).length <= 7);
-  assert.ok(allButtons(views.enf).length <= 6);
+  assert.ok(allButtons(views.main).length <= 8);
+  assert.ok(allButtons(views.enf).length <= 7);
 });
 
 test('navigasi tombol: setiap callback di view bisa ditangani tanpa galat', async () => {

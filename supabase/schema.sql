@@ -126,7 +126,7 @@ create table if not exists join_requests (
   username text,
   requested_at timestamptz not null default now(),
   due_at timestamptz,
-  status text not null default 'waiting',  -- waiting | manual | processing | approved | declined | gone | error
+  status text not null default 'waiting',  -- waiting | gate | gating | manual | processing | approved | declined | gone | error
   reason text,
   dm_status text,                           -- sent | failed | skipped
   processed_by text,
@@ -139,3 +139,20 @@ alter table join_requests enable row level security;
 
 -- Sinkronisasi member: kapan terakhir diverifikasi ke Telegram
 alter table members add column if not exists checked_at timestamptz;
+
+-- =====================================================================
+-- Gerbang join: persetujuan aturan dan wajib join channel/grup lain
+-- =====================================================================
+
+alter table chats add column if not exists ar_agree boolean not null default false;
+alter table chats add column if not exists ar_agree_text text;
+alter table chats add column if not exists ar_agree_btn text;
+alter table chats add column if not exists ar_force boolean not null default false;
+alter table chats add column if not exists ar_force_chats jsonb not null default '[]'::jsonb;
+alter table join_requests add column if not exists agreed_at timestamptz;
+
+-- =====================================================================
+-- Pesan pemberitahuan ban ke pengguna (opsional)
+-- =====================================================================
+
+alter table ban_log add column if not exists dm_status text;   -- sent | failed | skipped
