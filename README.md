@@ -41,7 +41,7 @@ Siapkan akun **Telegram**, **GitHub**, **Supabase**, dan **Vercel** (semuanya gr
 | `SETUP_KEY` | kata acak lain, untuk membuka halaman setup |
 | `CRON_SECRET` | kata acak lain, untuk pemeriksaan terjadwal |
 | `SUPABASE_URL` | Project URL dari Supabase |
-| `SUPABASE_SERVICE_KEY` | service_role key dari Supabase |
+| `SUPABASE_SERVICE_KEY` | service_role key (awalan `eyJ`) atau secret key (awalan `sb_secret_`) |
 
 **6. Hubungkan bot.** Buka alamat ini di browser:
 `https://NAMA-PROYEK.vercel.app/api/setup?key=ISI_SETUP_KEY`
